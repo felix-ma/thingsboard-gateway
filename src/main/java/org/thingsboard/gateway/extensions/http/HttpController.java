@@ -47,8 +47,9 @@ public class HttpController {
 
     @RequestMapping(value = "/uplink/{converterId}", method = RequestMethod.POST)
     public void handleRequest(@PathVariable String converterId,
+                              @RequestHeader(name = TOKEN_HEADER, required = false) String token,
                               @RequestBody String body) throws Exception {
-        service.processRequest(converterId, null, body);
+        service.processRequest(converterId, token, body);
     }
 
     @ExceptionHandler(Exception.class)
