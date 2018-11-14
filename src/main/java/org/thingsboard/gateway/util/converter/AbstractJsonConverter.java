@@ -18,8 +18,11 @@ package org.thingsboard.gateway.util.converter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.DocumentContext;
 import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.JSONObject;
 import org.thingsboard.gateway.extensions.opc.conf.mapping.DeviceMapping;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,7 +79,11 @@ public abstract class AbstractJsonConverter {
 
     protected static <T> T apply(DocumentContext document, String expression) {
         try {
-            return document.read(expression);
+            T read = document.read(expression);
+            // change LinkedHashMap to jsonString
+            if (read != null && LinkedHashMap.class.getName().equals(read.getClass().getName()))
+                read = (T) JSONObject.toJSONString((Map) read);
+            return read;
         } catch (RuntimeException e) {
             log.error("Failed to apply expression: {}. Reason: {}", expression, e.getMessage(), e);
             throw new RuntimeException("Failed to apply expression " + expression);
