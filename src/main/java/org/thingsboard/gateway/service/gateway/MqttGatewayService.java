@@ -25,11 +25,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
-import nl.jk5.mqtt.MqttClient;
-import nl.jk5.mqtt.MqttClientCallback;
-import nl.jk5.mqtt.MqttClientConfig;
-import nl.jk5.mqtt.MqttConnectResult;
-import nl.jk5.mqtt.MqttHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +50,7 @@ import org.thingsboard.gateway.service.data.RpcCommandData;
 import org.thingsboard.gateway.service.data.RpcCommandResponse;
 import org.thingsboard.gateway.service.data.RpcCommandSubscription;
 import org.thingsboard.gateway.util.JsonTools;
+import org.thingsboard.mqtt.*;
 import org.thingsboard.server.common.data.kv.BooleanDataEntry;
 import org.thingsboard.server.common.data.kv.DoubleDataEntry;
 import org.thingsboard.server.common.data.kv.KvEntry;
@@ -443,6 +439,11 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         devices.clear();
     }
 
+    @Override
+    public void onSuccessfulReconnect() {
+
+    }
+
     private void onAttributesUpdate(String message) {
         JsonNode payload = fromString(message);
         String deviceName = payload.get("device").asText();
@@ -473,7 +474,7 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
             RpcCommandData rpcCommand = new RpcCommandData();
             rpcCommand.setRequestId(data.get("id").asInt());
             rpcCommand.setMethod(data.get("method").asText());
-            rpcCommand.setParams(JsonTools.toString(data.get("params")));
+            rpcCommand.setParams(data.get("params").asText());
             listeners.forEach(listener -> callbackExecutor.submit(() -> {
                 try {
                     listener.onRpcCommand(deviceName, rpcCommand);
@@ -636,7 +637,7 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         try {
             MqttClientConfig mqttClientConfig = getMqttClientConfig();
             mqttClientConfig.setUsername(connection.getSecurity().getAccessToken());
-            tbClient = MqttClient.create(mqttClientConfig);
+            tbClient = MqttClient.create(mqttClientConfig, this);
             tbClient.setCallback(this);
             tbClient.setEventLoop(nioEventLoopGroup);
             Promise<MqttConnectResult> connectResult = (Promise<MqttConnectResult>) tbClient.connect(connection.getHost(), connection.getPort());
