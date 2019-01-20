@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-package org.thingsboard.gateway.extensions.modbus.conf.transport;
+package org.thingsboard.gateway.extensions.opc;
 
-import lombok.Data;
-import lombok.ToString;
-
-@Data
-@ToString(callSuper=true, includeFieldNames=true)
-public class ModbusTcpTransportConfiguration extends ModbusIpTransportConfiguration {
-    boolean rtuOverTcp;
-    boolean reconnect;
+public interface OpcUaDeviceAware {
+    OpcUaDevice getDevice(String deviceName);
 }
