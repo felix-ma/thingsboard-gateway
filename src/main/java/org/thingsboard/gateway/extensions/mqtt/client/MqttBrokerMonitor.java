@@ -118,7 +118,7 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
     private void checkConnection() {
         if (!client.isConnected()) {
             synchronized (connectLock) {
-                while (!client.isConnected()) {
+                while (!client.isConnected() && !scheduler.isShutdown()) {
                     log.debug("[{}:{}] MQTT broker connection attempt!", configuration.getHost(), configuration.getPort());
                     try {
                         client.connect(clientOptions, null, new IMqttActionListener() {
