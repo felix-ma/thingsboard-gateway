@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 The Thingsboard Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,6 +52,14 @@ public class MqttJsonConverter extends BasicJsonConverter implements MqttDataCon
     private Pattern deviceTypeTopicPattern;
     private int timeout;
 
+    /**
+     * TODO 数据解析
+     *
+     * @param topic
+     * @param msg
+     * @return
+     * @throws Exception
+     */
     @Override
     public List<DeviceData> convert(String topic, MqttMessage msg) throws Exception {
         String data = new String(msg.getPayload(), StandardCharsets.UTF_8);
@@ -84,13 +92,22 @@ public class MqttJsonConverter extends BasicJsonConverter implements MqttDataCon
         return parse(topic, srcList);
     }
 
-    private List<DeviceData> parse(String topic, List<String> srcList) throws ParseException{
+    /**
+     * 构造发送数据
+     *
+     * @param topic
+     * @param srcList
+     * @return
+     * @throws ParseException
+     */
+    private List<DeviceData> parse(String topic, List<String> srcList) throws ParseException {
         List<DeviceData> result = new ArrayList<>(srcList.size());
         for (String src : srcList) {
             Configuration conf = Configuration.builder()
                     .options(Option.SUPPRESS_EXCEPTIONS).build();
 
             DocumentContext document = JsonPath.using(conf).parse(src);
+            // TODO 设置ts发送时间
             long ts = System.currentTimeMillis();
             String deviceName;
             String deviceType = null;
@@ -114,6 +131,12 @@ public class MqttJsonConverter extends BasicJsonConverter implements MqttDataCon
         return result;
     }
 
+    /**
+     * 解析设备名
+     *
+     * @param topic
+     * @return
+     */
     private String evalDeviceName(String topic) {
         if (deviceNameTopicPattern == null) {
             deviceNameTopicPattern = Pattern.compile(deviceNameTopicExpression);
@@ -125,6 +148,12 @@ public class MqttJsonConverter extends BasicJsonConverter implements MqttDataCon
         return null;
     }
 
+    /**
+     * 解析设备类型
+     *
+     * @param topic
+     * @return
+     */
     private String evalDeviceType(String topic) {
         if (deviceTypeTopicPattern == null) {
             deviceTypeTopicPattern = Pattern.compile(deviceTypeTopicExpression);

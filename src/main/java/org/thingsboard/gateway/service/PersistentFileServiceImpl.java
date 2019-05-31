@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 The Thingsboard Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -84,7 +84,9 @@ public class PersistentFileServiceImpl implements PersistentFileService {
     }
 
     private List<File> getFiles(String nameRegex) {
-        File[] filesArray = storageDir.listFiles((file) -> {return !file.isDirectory() && file.getName().matches(nameRegex);});
+        File[] filesArray = storageDir.listFiles((file) -> {
+            return !file.isDirectory() && file.getName().matches(nameRegex);
+        });
         Arrays.sort(filesArray, Comparator.comparing(File::lastModified));
         return new ArrayList<>(Arrays.asList(filesArray));
     }
@@ -116,13 +118,26 @@ public class PersistentFileServiceImpl implements PersistentFileService {
         resendBuffer = new ConcurrentLinkedDeque<>();
     }
 
+    /**
+     * TODO 数据构造，并持久化
+     *
+     * @param topic
+     * @param msgId
+     * @param payload
+     * @param deviceId
+     * @param onSuccess
+     * @param onFailure
+     * @return
+     * @throws IOException
+     */
     @Override
-    public MqttDeliveryFuture persistMessage(String topic,  int msgId, byte[] payload, String deviceId,
+    public MqttDeliveryFuture persistMessage(String topic, int msgId, byte[] payload, String deviceId,
                                              Consumer<Void> onSuccess,
                                              Consumer<Throwable> onFailure) throws IOException {
         MqttPersistentMessage message = MqttPersistentMessage.builder().id(UUID.randomUUID())
                 .topic(topic).deviceId(deviceId).messageId(msgId).payload(payload).build();
         MqttDeliveryFuture future = new MqttDeliveryFuture();
+        //TODO 持久化
         addMessageToBuffer(message);
         callbacks.put(message.getId(), new MqttCallbackWrapper(onSuccess, onFailure));
         futures.put(message.getId(), future);
@@ -197,6 +212,12 @@ public class PersistentFileServiceImpl implements PersistentFileService {
         return Optional.ofNullable(mqttCallbackWrapper.getFailureCallback());
     }
 
+    /**
+     * TODO 重试发送
+     *
+     * @param message
+     * @throws IOException
+     */
     @Override
     public void saveForResend(MqttPersistentMessage message) throws IOException {
         if (resendBuffer.size() >= persistence.getBufferSize()) {
@@ -208,11 +229,17 @@ public class PersistentFileServiceImpl implements PersistentFileService {
 
     @Override
     public void saveForResend(List<MqttPersistentMessage> messages) throws IOException {
-       for (MqttPersistentMessage message : messages) {
-           saveForResend(message);
-       }
+        for (MqttPersistentMessage message : messages) {
+            saveForResend(message);
+        }
     }
 
+    /**
+     * TODO 根据bufferSize来判断是否存储文件
+     *
+     * @param message
+     * @throws IOException
+     */
     private void addMessageToBuffer(MqttPersistentMessage message) throws IOException {
         if (sendBuffer.size() >= persistence.getBufferSize()) {
             storageFiles.add(flushBufferToFile(sendBuffer, STORAGE_FILE_PREFIX + storageFileCounter++));
@@ -244,7 +271,7 @@ public class PersistentFileServiceImpl implements PersistentFileService {
         }
     }
 
-    private List<MqttPersistentMessage> readFromFile(File file)  throws IOException {
+    private List<MqttPersistentMessage> readFromFile(File file) throws IOException {
         List<MqttPersistentMessage> messages = new ArrayList<>();
         ObjectInputStream inputStream = null;
         try {

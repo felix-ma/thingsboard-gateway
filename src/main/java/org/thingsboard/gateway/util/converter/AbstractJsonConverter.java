@@ -77,12 +77,20 @@ public abstract class AbstractJsonConverter {
         return null;
     }
 
+    /**
+     * 解决了json对象转换的问题
+     * @param document
+     * @param expression
+     * @param <T>
+     * @return
+     */
     protected static <T> T apply(DocumentContext document, String expression) {
         try {
             T read = document.read(expression);
             // change LinkedHashMap to jsonString
-            if (read != null && LinkedHashMap.class.getName().equals(read.getClass().getName()))
+            if (read != null && LinkedHashMap.class.getName().equals(read.getClass().getName())) {
                 read = (T) JSONObject.toJSONString((Map) read);
+            }
             return read;
         } catch (RuntimeException e) {
             log.error("Failed to apply expression: {}. Reason: {}", expression, e.getMessage(), e);

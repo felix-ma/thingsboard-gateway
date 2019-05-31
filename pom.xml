@@ -25,7 +25,7 @@
     <version>2.2.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Thingsboard Gateway</name>
+    <name>PiXiu Gateway</name>
     <description>Gateway that simplifies legacy and external systems integration with Thingsboard platform. Contains
         OPC-UA, MQTT and other extensions
     </description>
@@ -51,8 +51,8 @@
         <slf4j.version>1.7.7</slf4j.version>
         <logback.version>1.1.7</logback.version>
         <j2mod.version>2.5.3</j2mod.version>
-        <pkg.name>tb-gateway</pkg.name>
-        <pkg.user>thingsboard</pkg.user>
+        <pkg.name>pixiu-gw</pkg.name>
+        <pkg.user>pixiu</pkg.user>
         <pkg.unixLogFolder>/var/log/${pkg.name}</pkg.unixLogFolder>
         <pkg.installFolder>/usr/share/${pkg.name}</pkg.installFolder>
         <pkg.win.dist>${project.build.directory}/windows</pkg.win.dist>
@@ -402,7 +402,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Implementation-Title>Thingsboard Gateway</Implementation-Title>
+                            <Implementation-Title>${project.name}</Implementation-Title>
                             <Implementation-Version>${project.version}</Implementation-Version>
                         </manifestEntries>
                     </archive>

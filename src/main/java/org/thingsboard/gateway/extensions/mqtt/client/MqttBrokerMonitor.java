@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 The Thingsboard Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -67,6 +67,9 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
         this.devices = new HashSet<>();
     }
 
+    /**
+     * TODO 连接mqtt服务
+     */
     public void connect() {
         try {
             client = new MqttAsyncClient((configuration.isSsl() ? "ssl" : "tcp") + "://" + configuration.getHost() + ":" + configuration.getPort(),
@@ -115,6 +118,9 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
         scheduler.shutdownNow();
     }
 
+    /**
+     * TODO 检查与mqtt服务的连接，并尝试重新连接
+     */
     private void checkConnection() {
         if (!client.isConnected()) {
             synchronized (connectLock) {
@@ -149,21 +155,32 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
         }
     }
 
+    /**
+     * TODO 初始化 mqtt订阅信息
+     *
+     * @throws MqttException
+     */
     private void subscribeToTopics() throws MqttException {
         List<IMqttToken> tokens = new ArrayList<>();
+        //TODO 数据推送操作
         for (MqttTopicMapping mapping : configuration.getMapping()) {
-            tokens.add(client.subscribe(mapping.getTopicFilter(), 1, new MqttTelemetryMessageListener(this::onDeviceData, mapping.getConverter())));
+            tokens.add(
+                    client.subscribe(mapping.getTopicFilter(), 1, new MqttTelemetryMessageListener(this::onDeviceData, mapping.getConverter()))
+            );
         }
+        //TODO 连接操作
         if (configuration.getConnectRequests() != null) {
             for (DeviceStateChangeMapping mapping : configuration.getConnectRequests()) {
                 tokens.add(client.subscribe(mapping.getTopicFilter(), 1, new MqttDeviceStateChangeMessageListener(mapping, this::onDeviceConnect)));
             }
         }
+        //TODO 断开连接操作
         if (configuration.getDisconnectRequests() != null) {
             for (DeviceStateChangeMapping mapping : configuration.getDisconnectRequests()) {
                 tokens.add(client.subscribe(mapping.getTopicFilter(), 1, new MqttDeviceStateChangeMessageListener(mapping, this::onDeviceDisconnect)));
             }
         }
+        //TODO 数据请求操作
         if (configuration.getAttributeRequests() != null) {
             for (AttributeRequestsMapping mapping : configuration.getAttributeRequests()) {
                 tokens.add(client.subscribe(mapping.getTopicFilter(), 1, new MqttAttributeRequestsMessageListener(this::onAttributeRequest, mapping)));
@@ -186,17 +203,26 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
         cleanUpKeepAliveTimes(deviceName);
     }
 
+    /**
+     * TODO 监听设备数据到来
+     *
+     * @param data
+     */
     private void onDeviceData(List<DeviceData> data) {
         for (DeviceData dd : data) {
             if (devices.add(dd.getName())) {
+                // 获取设备name 并且连接
                 gateway.onDeviceConnect(dd.getName(), dd.getType());
             }
             if (!dd.getAttributes().isEmpty()) {
+                // TODO 更新设备属性数据
                 gateway.onDeviceAttributesUpdate(dd.getName(), dd.getAttributes());
             }
             if (!dd.getTelemetry().isEmpty()) {
+                // TODO 更新设备遥测数据
                 gateway.onDeviceTelemetry(dd.getName(), dd.getTelemetry());
             }
+            //TODO 如果设备超时时间为0 则永不超时？
             if (dd.getTimeout() != 0) {
                 ScheduledFuture<?> future = deviceKeepAliveTimers.get(dd.getName());
                 if (future != null) {
@@ -248,6 +274,12 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
         deviceKeepAliveTimers.put(dd.getName(), f);
     }
 
+    /**
+     * TODO 监听设备属性更新
+     *
+     * @param deviceName
+     * @param attributes
+     */
     @Override
     public void onAttributesUpdated(String deviceName, List<KvEntry> attributes) {
         List<AttributeUpdatesMapping> mappings = configuration.getAttributeUpdates().stream()
@@ -260,6 +292,7 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
                 String topic = replace(mapping.getTopicExpression(), deviceName, attribute);
                 String body = replace(mapping.getValueExpression(), deviceName, attribute);
                 MqttMessage msg = new MqttMessage(body.getBytes(StandardCharsets.UTF_8));
+                //TODO 发送到mqtt服务
                 publish(deviceName, topic, msg);
             }
         }
@@ -312,6 +345,13 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
         }
     }
 
+    /**
+     * TODO 往mqtt服务上发送数据
+     *
+     * @param deviceName
+     * @param topic
+     * @param msg
+     */
     private void publish(final String deviceName, String topic, MqttMessage msg) {
         try {
             client.publish(topic, msg, null, new IMqttActionListener() {
@@ -341,6 +381,14 @@ public class MqttBrokerMonitor implements MqttCallback, AttributesUpdateListener
                 .replace("${params}", command.getParams());
     }
 
+    /**
+     * TODO 根据扩展配置转换数据格式
+     *
+     * @param expression
+     * @param deviceName
+     * @param attribute
+     * @return
+     */
     private static String replace(String expression, String requestId, String deviceName, KvEntry attribute) {
         return expression.replace("${deviceName}", deviceName)
                 .replace("${requestId}", requestId)

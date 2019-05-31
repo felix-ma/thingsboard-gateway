@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 The Thingsboard Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -156,10 +156,14 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         this.extensionsConfigListener = extensionsConfigListener;
     }
 
+    /**
+     * TODO 初始化
+     */
     @Override
     @PostConstruct
     public void init() {
         BlockingQueue<MessageFuturePair> incomingQueue = new LinkedBlockingQueue<>();
+        // TODO 从配置文件中加载
         this.tenantLabel = configuration.getLabel();
         this.connection = configuration.getConnection();
         this.reporting = configuration.getReporting();
@@ -173,6 +177,9 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         scheduler.scheduleAtFixedRate(this::reportStats, 0, reporting.getInterval(), TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * TODO 设置超时时间
+     */
     private void initTimeouts() {
         // Backwards compatibility with old config file
         if (connection.getConnectionTimeout() == 0) {
@@ -197,6 +204,13 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         return tenantLabel;
     }
 
+    /**
+     * TODO 通过msgId将连接设备加入devices中
+     *
+     * @param deviceName
+     * @param deviceType
+     * @return
+     */
     @Override
     public MqttDeliveryFuture onDeviceConnect(final String deviceName, final String deviceType) {
         final int msgId = msgIdSeq.incrementAndGet();
@@ -271,7 +285,17 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
                 error -> log.warn("[{}][{}] Failed to publish device telemetry!", deviceName, msgId, error));
     }
 
-
+    /**
+     * TODO 持久化数据,并从添加到发送队列中
+     *
+     * @param topic
+     * @param msgId
+     * @param payload
+     * @param deviceId
+     * @param onSuccess
+     * @param onFailure
+     * @return
+     */
     private MqttDeliveryFuture persistMessage(String topic,
                                               int msgId,
                                               byte[] payload,
@@ -380,12 +404,21 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
                         } catch (Exception e) {
                             log.warn("Failed to connect to ThingsBoard!", e);
                             */
+
+    /**
+     * TODO 判断设备是否连接
+     *
+     * @param deviceName
+     */
     private void checkDeviceConnected(String deviceName) {
         if (!devices.containsKey(deviceName)) {
             onDeviceConnect(deviceName, null);
         }
     }
 
+    /**
+     * TODO 往平台推送统计数据
+     */
     private void reportStats() {
         try {
             ObjectNode node = newNode();
@@ -407,6 +440,12 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         }
     }
 
+    /**
+     * TODO 订阅平台推送的数据
+     *
+     * @param topic
+     * @param payload
+     */
     @Override
     public void onMessage(String topic, ByteBuf payload) {
         String message = payload.toString(StandardCharsets.UTF_8);
@@ -444,14 +483,22 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
 
     }
 
+    /**
+     * TODO 监听设备属性更新
+     *
+     * @param message
+     */
     private void onAttributesUpdate(String message) {
         JsonNode payload = fromString(message);
+        // 获取设备名
         String deviceName = payload.get("device").asText();
+        // 根据设备名获取监听器
         Set<AttributesUpdateListener> listeners = attributeUpdateSubs.stream()
                 .filter(sub -> sub.matches(deviceName)).map(sub -> sub.getListener())
                 .collect(Collectors.toSet());
         if (!listeners.isEmpty()) {
             JsonNode data = payload.get("data");
+            // 获取更新的属性值
             List<KvEntry> attributes = getKvEntries(data);
             listeners.forEach(listener -> callbackExecutor.submit(() -> {
                 try {
@@ -463,6 +510,9 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         }
     }
 
+    /**
+     * @param message
+     */
     private void onRpcCommand(String message) {
         JsonNode payload = fromString(message);
         String deviceName = payload.get("device").asText();
@@ -487,6 +537,11 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         }
     }
 
+    /**
+     * TODO 当获取到配置时会将获取到的配置发送给平台共享属性里面
+     *
+     * @param message
+     */
     private void onGatewayAttributesGet(String message) {
         log.info("Configuration arrived! {}", message);
         JsonNode payload = fromString(message);
@@ -640,6 +695,7 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
             tbClient = MqttClient.create(mqttClientConfig, this);
             tbClient.setCallback(this);
             tbClient.setEventLoop(nioEventLoopGroup);
+            //TODO 连接mqtt服务
             Promise<MqttConnectResult> connectResult = (Promise<MqttConnectResult>) tbClient.connect(connection.getHost(), connection.getPort());
             connectResult.addListener(future -> {
                 if (future.isSuccess()) {
@@ -655,6 +711,7 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
             connectResult.get(connection.getConnectionTimeout(), TimeUnit.MILLISECONDS);
 
 
+            //TODO 订阅tb平台的topic
             tbClient.on(DEVICE_ATTRIBUTES_TOPIC, this).await(connection.getConnectionTimeout(), TimeUnit.MILLISECONDS);
             tbClient.on(DEVICE_GET_ATTRIBUTES_RESPONSE_PLUS_TOPIC, this).await(connection.getConnectionTimeout(), TimeUnit.MILLISECONDS);
 
@@ -662,6 +719,7 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
             tbClient.on(GATEWAY_ATTRIBUTES_TOPIC, this).await(connection.getConnectionTimeout(), TimeUnit.MILLISECONDS);
             tbClient.on(GATEWAY_RPC_TOPIC, this).await(connection.getConnectionTimeout(), TimeUnit.MILLISECONDS);
 
+            //TODO 获取扩展配置
             byte[] msgData = toBytes(newNode().put("sharedKeys", "configuration"));
             persistMessage(DEVICE_GET_ATTRIBUTES_REQUEST_TOPIC, msgIdSeq.incrementAndGet(), msgData, null,
                     null,
@@ -681,6 +739,11 @@ public class MqttGatewayService implements GatewayService, MqttHandler, MqttClie
         }
     }
 
+    /**
+     * TODO mqtt连接是否ssl
+     *
+     * @return
+     */
     private MqttClientConfig getMqttClientConfig() {
         MqttClientConfig mqttClientConfig;
         if (!StringUtils.isEmpty(connection.getSecurity().getAccessToken())) {

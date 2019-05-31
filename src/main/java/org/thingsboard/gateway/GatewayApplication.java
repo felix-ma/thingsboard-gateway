@@ -27,7 +27,7 @@ import java.util.Arrays;
 public class GatewayApplication {
 
     private static final String SPRING_CONFIG_NAME_KEY = "--spring.config.name";
-    public static final String DEFAULT_SPRING_CONFIG_PARAM = SPRING_CONFIG_NAME_KEY + "=" + "tb-gateway";
+    public static final String DEFAULT_SPRING_CONFIG_PARAM = SPRING_CONFIG_NAME_KEY + "=" + "pixiu-gw";
 
     public static void main(String[] args) {
         try {

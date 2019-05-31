@@ -34,14 +34,14 @@ gateways:
       persistence:
         type: file
         path: storage
-        bufferSize: 1000
+        bufferSize: 10000
       connection:
-        host: "${GATEWAY_HOST:YOUR_HOST}"
-        port: 1883
+        host: "${GATEWAY_HOST:192.168.3.113}"
+        port: 1884
         retryInterval: 3000
-        maxInFlight: 1000
+        maxInFlight: 10000
         security:
-          accessToken: "${GATEWAY_ACCESS_TOKEN:YOUR_TOKEN}"
+          accessToken: "${GATEWAY_ACCESS_TOKEN:o53iawkawpgrCOw4i2LV}"
       remoteConfiguration: true
       extensions:
         -

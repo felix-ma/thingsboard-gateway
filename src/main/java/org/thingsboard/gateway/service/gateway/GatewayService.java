@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 The Thingsboard Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,14 +30,30 @@ import java.util.function.Consumer;
  */
 public interface GatewayService {
 
+    /**
+     * 初始化
+     *
+     * @throws Exception
+     */
     void init() throws Exception;
 
+    /**
+     * 销毁
+     *
+     * @throws Exception
+     */
     void destroy() throws Exception;
 
+    /**
+     * 获取配置的标签
+     *
+     * @return
+     */
     String getTenantLabel();
 
     /**
      * Inform gateway service that device is connected
+     * 通知网关服务设备已连接
      *
      * @param deviceName
      * @param deviceType
@@ -46,6 +62,7 @@ public interface GatewayService {
 
     /**
      * Inform gateway service that device is disconnected
+     * 通知网关服务设备已断开连接
      *
      * @param deviceName
      */
@@ -53,6 +70,7 @@ public interface GatewayService {
 
     /**
      * Report device attributes change to Thingsboard
+     * 往平台发送设备属性信息变更，不携带ts
      *
      * @param deviceName - the device name
      * @param attributes - the attribute values list
@@ -61,6 +79,7 @@ public interface GatewayService {
 
     /**
      * Report device telemetry to Thingsboard
+     * 往平台发送设备遥测数据，携带ts
      *
      * @param deviceName - the device name
      * @param telemetry  - the telemetry values list
@@ -69,6 +88,7 @@ public interface GatewayService {
 
     /**
      * Report attributes request to Thingsboard
+     * 往平台发送属性数据请求
      *
      * @param attributeRequest - attributes request
      * @param listener         - attributes response
@@ -77,6 +97,7 @@ public interface GatewayService {
 
     /**
      * Report response from device to the server-side RPC call from Thingsboard
+     * 往平台发送服务段rpc请求
      *
      * @param response - the device response to RPC call
      */
@@ -84,6 +105,7 @@ public interface GatewayService {
 
     /**
      * Subscribe to attribute updates from Thingsboard
+     * 订阅平台数据更新
      *
      * @param subscription - the subscription
      * @return true if successful, false if already subscribed
@@ -92,6 +114,7 @@ public interface GatewayService {
 
     /**
      * Subscribe to server-side rpc commands from Thingsboard
+     * 订阅平台 rpc 服务器端调用
      *
      * @param subscription - the subscription
      * @return true if successful, false if already subscribed
@@ -100,6 +123,7 @@ public interface GatewayService {
 
     /**
      * Unsubscribe to attribute updates from Thingsboard
+     * 取消在平台订阅属性更新
      *
      * @param subscription - the subscription
      * @return true if successful, false if already unsubscribed
@@ -108,6 +132,7 @@ public interface GatewayService {
 
     /**
      * Unsubscribe to server-side rpc commands from Thingsboard
+     * 取消订阅平台 rpc 服务器端调用
      *
      * @param subscription - the subscription
      * @return true if successful, false if already unsubscribed
@@ -116,6 +141,7 @@ public interface GatewayService {
 
     /**
      * Report generic error from one of gateway components
+     * 网关组件，报告一般性错误
      *
      * @param e - the error
      */
@@ -123,6 +149,7 @@ public interface GatewayService {
 
     /**
      * Report error related to device
+     * 报告与设备相关的错误
      *
      * @param deviceName - the device name
      * @param e          - the error
@@ -131,6 +158,7 @@ public interface GatewayService {
 
     /**
      * Report applied configuration
+     * 当应用配置更新时
      *
      * @param configuration - extension configuration
      */
@@ -138,6 +166,7 @@ public interface GatewayService {
 
     /**
      * Report extension configuration error
+     * 当配置更新失败
      *
      * @param e             - the error
      * @param configuration - extension configuration
@@ -146,6 +175,7 @@ public interface GatewayService {
 
     /**
      * Report extension configuration status
+     * 配置目前状态
      *
      * @param id     - extension id
      * @param status - extension status
