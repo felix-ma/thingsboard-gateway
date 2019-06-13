@@ -35,6 +35,7 @@ import org.thingsboard.gateway.service.gateway.GatewayService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +55,8 @@ public class ModbusClient implements ModbusDeviceAware {
 
     private ScheduledExecutorService executor;
     private RpcProcessor rpcProcessor;
+
+    ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     private Object connectLock = new Object();
 
@@ -120,7 +123,7 @@ public class ModbusClient implements ModbusDeviceAware {
      * TODO 断开连接之后未尝试重新连接
      */
     public void connect() {
-        checkConnection();
+        cachedThreadPool.execute(this::checkConnection);
     }
 
     /**
